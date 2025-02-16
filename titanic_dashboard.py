@@ -2,87 +2,104 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pyarrow as pa
 
-# Lue Titanic data Excel-tiedostosta
-file_path = "C:\\Users\\othma\\Desktop\\Koulu\\Data Analysis and Visualisation\\Titanic Data.xlsx"
-titanic_data = pd.read_excel(file_path)
+# Lue Titanic data CSV-tiedostosta
+file_path = r"C:\Users\othma\Desktop\Koulu\Data Analysis and Visualisation\custom dashboard with Streamlit\Titanic Data.csv"
+
+# Yritetään lukea CSV-tiedosto ja määritetään erotin automaattisesti
+try:
+    titanic_data = pd.read_csv(file_path, sep=None, engine="python", on_bad_lines="skip")
+except Exception as e:
+    st.error(f"Virhe tiedoston lukemisessa: {e}")
+    st.stop()
+
+# Muunnetaan sarakkeet oikeaan muotoon
+if 'Age' in titanic_data.columns:
+    titanic_data['Age'] = pd.to_numeric(titanic_data['Age'], errors='coerce')
+
+if 'Pclass' in titanic_data.columns:
+    titanic_data['Pclass'] = pd.to_numeric(titanic_data['Pclass'], errors='coerce')
+
+if 'Survived' in titanic_data.columns:
+    titanic_data['Survived'] = pd.to_numeric(titanic_data['Survived'], errors='coerce')
+
+if 'Ticket' in titanic_data.columns:
+    titanic_data['Ticket'] = titanic_data['Ticket'].astype(str)
 
 # Näytä pääotsikko
 st.title("Titanic Data Analysis")
 
 # Näytä data taulukkomuodossa
-st.write(titanic_data)
-
-# Muuta 'Ticket'-sarake merkkijonoksi ennen dataframeen syöttämistä
-titanic_data['Ticket'] = titanic_data['Ticket'].astype(str)
-
-# Lataa pyarrow-taulukko
-table = pa.Table.from_pandas(titanic_data)
+st.write("Titanic-data:")
+st.dataframe(titanic_data)
 
 # Ikäjakauman visualisointi
-st.write("Titanicin ikäjakauma:")
-fig, ax = plt.subplots(figsize=(10,6))
-sns.histplot(titanic_data['Age'].dropna(), kde=True, bins=20, color='skyblue', ax=ax)
-ax.set_title('Ikäjakauma Titanic-matkustajilla', fontsize=16)
-ax.set_xlabel('Ikä', fontsize=12)
-ax.set_ylabel('Frequenttisuus', fontsize=12)
-st.pyplot(fig)
+if 'Age' in titanic_data.columns and titanic_data['Age'].notna().any():
+    st.write("Titanicin ikäjakauma:")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.histplot(titanic_data['Age'].dropna(), kde=True, bins=20, color='skyblue', ax=ax)
+    ax.set_title('Ikäjakauma Titanic-matkustajilla', fontsize=16)
+    ax.set_xlabel('Ikä', fontsize=12)
+    ax.set_ylabel('Frequenttisuus', fontsize=12)
+    st.pyplot(fig)
 
 # Sukupuolen jakauma
-st.write("Titanicin sukupuolen jakauma:")
-gender_count = titanic_data['Sex'].value_counts()
-fig, ax = plt.subplots(figsize=(6,4))
-sns.barplot(x=gender_count.index, y=gender_count.values, palette="pastel", ax=ax)
-ax.set_title('Sukupuolen jakauma', fontsize=16)
-ax.set_xlabel('Sukupuoli', fontsize=12)
-ax.set_ylabel('Määrä', fontsize=12)
-st.pyplot(fig)
+if 'Sex' in titanic_data.columns:
+    st.write("Titanicin sukupuolen jakauma:")
+    gender_count = titanic_data['Sex'].value_counts()
+    fig, ax = plt.subplots(figsize=(6, 4))
+    sns.barplot(x=gender_count.index, y=gender_count.values, palette="pastel", ax=ax)
+    ax.set_title('Sukupuolen jakauma', fontsize=16)
+    ax.set_xlabel('Sukupuoli', fontsize=12)
+    ax.set_ylabel('Määrä', fontsize=12)
+    st.pyplot(fig)
 
-# Selite: Matkustajaluokka
-st.write("Titanicin matkustajaluokan jakauma:")
-class_count = titanic_data['Pclass'].value_counts()
-fig, ax = plt.subplots(figsize=(6,4))
-sns.barplot(x=class_count.index, y=class_count.values, palette="muted", ax=ax)
-ax.set_title('Matkustajaluokan jakauma', fontsize=16)
-ax.set_xlabel('Matkustajaluokka', fontsize=12)
-ax.set_ylabel('Määrä', fontsize=12)
-st.pyplot(fig)
+# Matkustajaluokan jakauma
+if 'Pclass' in titanic_data.columns:
+    st.write("Titanicin matkustajaluokan jakauma:")
+    class_count = titanic_data['Pclass'].value_counts()
+    fig, ax = plt.subplots(figsize=(6, 4))
+    sns.barplot(x=class_count.index, y=class_count.values, palette="muted", ax=ax)
+    ax.set_title('Matkustajaluokan jakauma', fontsize=16)
+    ax.set_xlabel('Matkustajaluokka', fontsize=12)
+    ax.set_ylabel('Määrä', fontsize=12)
+    st.pyplot(fig)
 
-# Selite: Selviytyminen
-st.write("Titanicin selviytyneiden jakauma:")
-survival_count = titanic_data['Survived'].value_counts()
-fig, ax = plt.subplots(figsize=(6,4))
-sns.barplot(x=survival_count.index, y=survival_count.values, palette="coolwarm", ax=ax)
-ax.set_title('Selviytyminen Titanicissa', fontsize=16)
-ax.set_xlabel('Selviytyminen (0=Ei, 1=Kyllä)', fontsize=12)
-ax.set_ylabel('Määrä', fontsize=12)
-st.pyplot(fig)
+# Selviytyneiden jakauma
+if 'Survived' in titanic_data.columns:
+    st.write("Titanicin selviytyneiden jakauma:")
+    survival_count = titanic_data['Survived'].value_counts()
+    fig, ax = plt.subplots(figsize=(6, 4))
+    sns.barplot(x=survival_count.index, y=survival_count.values, palette="coolwarm", ax=ax)
+    ax.set_title('Selviytyminen Titanicissa', fontsize=16)
+    ax.set_xlabel('Selviytyminen (0=Ei, 1=Kyllä)', fontsize=12)
+    ax.set_ylabel('Määrä', fontsize=12)
+    st.pyplot(fig)
 
 # Interaktiivinen ikävalitsin
-selected_age = st.slider('Valitse ikä', min_value=0, max_value=80, value=30)
-st.write(f'Valitsit iän: {selected_age}')
+if 'Age' in titanic_data.columns and titanic_data['Age'].notna().any():
+    min_age = int(titanic_data['Age'].min(skipna=True))
+    max_age = int(titanic_data['Age'].max(skipna=True))
+    selected_age = st.slider('Valitse ikä', min_value=min_age, max_value=max_age, value=min_age)
+    st.write(f'Valitsit iän: {selected_age}')
 
 # Interaktiivinen sukupuolivalitsin
-selected_gender = st.selectbox("Valitse sukupuoli", ["male", "female"])
-filtered_data = titanic_data[titanic_data['Sex'] == selected_gender]
-st.write(f"Data {selected_gender} matkustajista")
-st.dataframe(filtered_data)
+if 'Sex' in titanic_data.columns:
+    selected_gender = st.selectbox("Valitse sukupuoli", titanic_data['Sex'].unique())
+    filtered_data = titanic_data[titanic_data['Sex'] == selected_gender]
+    st.write(f"Data {selected_gender} matkustajista")
+    st.dataframe(filtered_data)
 
 # Interaktiivinen matkustajaluokka valitsin
-selected_class = st.selectbox("Valitse matkustajaluokka", [1, 2, 3])
-class_data = titanic_data[titanic_data['Pclass'] == selected_class]
-st.write(f"Data matkustajaluokassa {selected_class}")
-st.dataframe(class_data)
+if 'Pclass' in titanic_data.columns:
+    selected_class = st.selectbox("Valitse matkustajaluokka", sorted(titanic_data['Pclass'].dropna().unique()))
+    class_data = titanic_data[titanic_data['Pclass'] == selected_class]
+    st.write(f"Data matkustajaluokassa {selected_class}")
+    st.dataframe(class_data)
 
-# Kaikkien matkustajien selviäminen valitsimella
-selected_survival = st.selectbox("Valitse selviytymisstatus", [0, 1])
-survival_data = titanic_data[titanic_data['Survived'] == selected_survival]
-st.write(f"Data selviytyneistä: {selected_survival}")
-st.dataframe(survival_data)
-
-# Muuta 'Ticket'-sarake merkkijonoksi ennen dataframeen syöttämistä
-titanic_data['Ticket'] = titanic_data['Ticket'].astype(str)
-
-# Yritä konvertoida Arrow-taulukoksi
-table = pa.Table.from_pandas(titanic_data)
+# Interaktiivinen selviytymisen valitsin
+if 'Survived' in titanic_data.columns:
+    selected_survival = st.selectbox("Valitse selviytymisstatus", sorted(titanic_data['Survived'].dropna().unique()))
+    survival_data = titanic_data[titanic_data['Survived'] == selected_survival]
+    st.write(f"Data selviytyneistä: {selected_survival}")
+    st.dataframe(survival_data)

@@ -35,13 +35,18 @@ st.dataframe(titanic_data)
 
 # Ikäjakauman visualisointi
 if 'Age' in titanic_data.columns and titanic_data['Age'].notna().any():
-    st.write("Titanicin ikäjakauma:")
+    st.write("Titanicin matkustajien ikäjakauma:")
+    
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.histplot(titanic_data['Age'].dropna(), kde=True, bins=20, color='skyblue', ax=ax)
-    ax.set_title('Ikäjakauma Titanic-matkustajilla', fontsize=16)
-    ax.set_xlabel('Ikä', fontsize=12)
-    ax.set_ylabel('Frequenttisuus', fontsize=12)
+    
+    ax.set_title('Titanicin matkustajien ikäjakauma', fontsize=16)
+    ax.set_xlabel('Ikä (vuosina)', fontsize=14)
+    ax.set_ylabel('Matkustajien lukumäärä', fontsize=14)  # Korjattu termi
+    ax.grid(True, linestyle='--', alpha=0.7)  # Parannettu luettavuutta
+    
     st.pyplot(fig)
+
 
 # Sukupuolen jakauma
 if 'Sex' in titanic_data.columns:
